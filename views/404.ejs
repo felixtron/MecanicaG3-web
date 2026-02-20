@@ -1,0 +1,33 @@
+<%- include('partials/head', { title, description, extraCss: ['plugins/revolution/css/settings.css', 'plugins/revolution/css/navigation.css'] }) %>
+<%- include('partials/header') %>
+    <div class="page-content">
+        <div class="dlab-bnr-inr overlay-black-middle" style="background-image:url(/images/background/bg5.jpg);">
+            <div class="container">
+                <div class="dlab-bnr-inr-entry">
+                    <h1 class="text-white">Página no encontrada</h1>
+                </div>
+            </div>
+        </div>
+        <div class="breadcrumb-row">
+            <div class="container">
+                <ul class="list-inline">
+                    <li><a href="/">Inicio</a></li>
+                    <li>Error 404</li>
+                </ul>
+            </div>
+        </div>
+        <div class="section-full content-inner bg-white">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h2 class="text-primary">404</h2>
+                        <h3>La página que buscas no existe</h3>
+                        <p>Es posible que la página haya sido movida o eliminada.</p>
+                        <a href="/" class="site-button button-skew"><span>Volver al Inicio</span><i class="fa fa-angle-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('partials/footer') %>
+<%- include('partials/scripts', { extraJs: [], inlineJs: '', useRecaptcha: false }) %>

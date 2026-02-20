@@ -1,0 +1,37 @@
+<!-- JavaScript  files ========================================= -->
+<script src="/js/jquery.min.js"></script><!-- JQUERY.MIN JS -->
+<script src="/plugins/bootstrap/js/popper.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+<script src="/plugins/bootstrap/js/bootstrap.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+<script src="/plugins/bootstrap-select/bootstrap-select.min.js"></script><!-- FORM JS -->
+<script src="/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.js"></script><!-- FORM JS -->
+<script src="/plugins/magnific-popup/magnific-popup.js"></script><!-- MAGNIFIC POPUP JS -->
+<script src="/plugins/counter/waypoints-min.js"></script><!-- WAYPOINTS JS -->
+<script src="/plugins/counter/counterup.min.js"></script><!-- COUNTERUP JS -->
+<script src="/plugins/imagesloaded/imagesloaded.js"></script><!-- IMAGESLOADED -->
+<script src="/plugins/masonry/masonry-3.1.4.js"></script><!-- MASONRY -->
+<script src="/plugins/masonry/masonry.filter.js"></script><!-- MASONRY -->
+<script src="/plugins/owl-carousel/owl.carousel.js"></script><!-- OWL SLIDER -->
+<script src="/js/custom.min.js"></script><!-- CUSTOM FUCTIONS  -->
+<script src="/js/dz.carousel.min.js"></script><!-- SORTCODE FUCTIONS  -->
+
+<% if (typeof useRecaptcha !== 'undefined' && useRecaptcha) { %>
+<script src='https://www.google.com/recaptcha/api.js'></script>
+<% } %>
+<script src="/js/dz.ajax.js"></script><!-- CONTACT JS  -->
+<% if (typeof extraJs !== 'undefined' && extraJs.length) { %>
+<% extraJs.forEach(function(js) { %>
+<script src="/<%= js %>"></script>
+<% }); %>
+<% } %>
+<% if (typeof inlineJs !== 'undefined' && inlineJs) { %>
+<script>
+<%= inlineJs %>
+</script>
+<% } %>
+<!-- Cliengo -->
+<script type="text/javascript">(function () { var ldk = document.createElement('script'); ldk.type = 'text/javascript'; ldk.async = true; ldk.src = 'https://s.cliengo.com/weboptimizer/61ae422caccb8e002a9888c7/61ae422eaccb8e002a9888cb.js?platform=view_installation_code'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ldk, s); })();</script>
+<!-- Metricool -->
+<script>function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}loadScript(function(){beTracker.t({hash:"247431d1ddc9ff4bb4579bebb3305817"})});</script>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+<%- include('partials/head', { title, description, extraCss }) %>
+<%- include('partials/header') %>
+    <!-- Content -->
+    <div class="page-content bg-white">
+        <!-- inner page banner -->
+        <div class="dlab-bnr-inr overlay-black-middle" style="background-image:url(/images/background/bg4.jpg);">
+            <div class="container">
+                <div class="dlab-bnr-inr-entry">
+                    <h1 class="text-white">Registro</h1>
+                </div>
+            </div>
+        </div>
+        <!-- inner page banner END -->
+        <!-- Breadcrumb row -->
+        <div class="breadcrumb-row">
+            <div class="container">
+                <ul class="list-inline">
+                    <li><a href="/">Inicio</a></li>
+                    <li>Registro</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Breadcrumb row END -->
+        <!-- content area -->
+        <div class="content-area">
+            <div class="container">
+                <div class="row">
+                    <!-- Left part -->
+                    <div class="col-lg-9 col-md-8 m-b30">
+                        <h1 class="m-b20 m-t0">Técnico en Mecánica Automotriz</h1>
+                        <div class="dlab-separator bg-primary"></div>
+                        <h2 class="m-t30 m-b10">Ingresa tus datos, el programa y horario que te interesa.</h2>
+                        <div class="m-t20">
+                            <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/shell.js"></script>
+                            <script>
+                              hbspt.forms.create({
+                                portalId: "9315956",
+                                formId: "377a5182-5ebc-4cb5-b97d-b069ac47407e"
+                              });
+                            </script>
+                        </div>
+                    </div>
+                    <!-- Left part END -->
+                    <!-- Right part -->
+                    <div class="col-lg-3 col-md-4">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-6">
+                                <div class="icon-bx-wraper bx-style-1 p-a30 center m-b15">
+                                    <div class="icon-bx-sm text-primary bg-white radius border-2 m-b20">
+                                        <span class="icon-cell"><i class="ti-user"></i></span>
+                                    </div>
+                                    <div class="icon-content">
+                                        <h5 class="dlab-tilte text-uppercase">Inscripciones Abiertas</h5>
+                                        <p>Selecciona el programa y horario que más se adapte a tus necesidades.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-6">
+                                <div class="icon-bx-wraper bx-style-1 p-a30 center m-b15">
+                                    <div class="icon-bx-sm text-primary bg-white radius border-2 m-b20">
+                                        <span class="icon-cell"><i class="ti-home"></i></span>
+                                    </div>
+                                    <div class="icon-content">
+                                        <h5 class="dlab-tilte text-uppercase">Visita Nuestras Instalaciones</h5>
+                                        <p>Agenda una visita guiada y conoce nuestros talleres, laboratorios y áreas de práctica.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <div class="icon-bx-wraper bx-style-1 p-a20 left">
+                                    <div class="icon-bx-xs text-primary bg-white radius border-2">
+                                        <span class="icon-cell"><i class="ti-mobile"></i></span>
+                                    </div>
+                                    <div class="icon-content">
+                                        <h5 class="dlab-tilte text-uppercase">¿Necesitas Ayuda?</h5>
+                                        <p>Llámanos al <a href="tel:7222128955">(722) 212 8955</a> o escríbenos por <a href="https://wa.me/527294440190?text=Hola%2C%20quiero%20informaci%C3%B3n">WhatsApp</a>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right part END -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Content END-->
+<%- include('partials/footer') %>
+<%- include('partials/scripts', { extraJs: typeof extraJs !== 'undefined' ? extraJs : [], inlineJs: typeof inlineJs !== 'undefined' ? inlineJs : '', useRecaptcha: typeof useRecaptcha !== 'undefined' ? useRecaptcha : false }) %>

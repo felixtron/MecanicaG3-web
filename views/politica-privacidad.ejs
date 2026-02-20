@@ -1,0 +1,82 @@
+<%- include('partials/head', { title, description, extraCss }) %>
+<%- include('partials/header') %>
+    <!-- Content -->
+    <div class="page-content bg-white">
+        <!-- inner page banner -->
+        <div class="dlab-bnr-inr overlay-black-middle" style="background-image:url(/images/background/bg4.jpg);">
+            <div class="container">
+                <div class="dlab-bnr-inr-entry">
+                    <h1 class="text-white">Aviso de Privacidad</h1>
+                </div>
+            </div>
+        </div>
+        <!-- inner page banner END -->
+        <!-- Breadcrumb row -->
+        <div class="breadcrumb-row">
+            <div class="container">
+                <ul class="list-inline">
+                    <li><a href="/">Inicio</a></li>
+                    <li>Aviso de Privacidad</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Breadcrumb row END -->
+        <!-- content area -->
+        <div class="content-area">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 m-b30">
+                        <h1 class="m-b20 m-t0">Aviso de Privacidad</h1>
+                        <div class="dlab-separator bg-primary"></div>
+
+                        <h3 class="m-t30">Identidad del Responsable</h3>
+                        <p><strong>Escuela de Mecánica Automotriz G3</strong>, con domicilio en Marcelino Juárez No. 200, Col. Juárez, Toluca, Estado de México, C.P. 50040, es responsable del tratamiento de sus datos personales, de conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</p>
+
+                        <h3>Datos Personales Recabados</h3>
+                        <p>Para las finalidades señaladas en el presente aviso de privacidad, podemos recabar los siguientes datos personales:</p>
+                        <ul class="list-check-circle primary">
+                            <li>Nombre completo</li>
+                            <li>Correo electrónico</li>
+                            <li>Número de teléfono</li>
+                            <li>Dirección</li>
+                            <li>Datos académicos</li>
+                        </ul>
+
+                        <h3>Finalidad del Tratamiento</h3>
+                        <p>Los datos personales que recabamos serán utilizados para las siguientes finalidades:</p>
+                        <ul class="list-check-circle primary">
+                            <li>Procesar su solicitud de inscripción a nuestros programas educativos</li>
+                            <li>Brindar información sobre nuestros programas, certificaciones y servicios</li>
+                            <li>Enviar comunicaciones relacionadas con eventos, promociones y novedades</li>
+                            <li>Dar seguimiento a solicitudes de información y atención al cliente</li>
+                            <li>Cumplir con obligaciones legales y regulatorias aplicables</li>
+                        </ul>
+
+                        <h3>Transferencias de Datos</h3>
+                        <p>Sus datos personales no serán compartidos, vendidos ni transferidos a terceros sin su consentimiento previo, salvo en los casos expresamente previstos por la ley.</p>
+
+                        <h3>Derechos ARCO</h3>
+                        <p>Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse al tratamiento de sus datos personales (derechos ARCO). Para ejercer cualquiera de estos derechos, puede enviar una solicitud al correo electrónico: <a href="mailto:hola@mecanicag3.com">hola@mecanicag3.com</a></p>
+                        <p>Su solicitud deberá contener:</p>
+                        <ul class="list-angle-right">
+                            <li>Nombre completo del titular</li>
+                            <li>Descripción clara del derecho que desea ejercer</li>
+                            <li>Domicilio o correo electrónico para recibir la respuesta</li>
+                            <li>Documento que acredite su identidad</li>
+                        </ul>
+
+                        <h3>Uso de Cookies y Tecnologías de Rastreo</h3>
+                        <p>Nuestro sitio web utiliza cookies y otras tecnologías de rastreo para mejorar su experiencia de navegación, analizar el tráfico del sitio y personalizar contenido. Estas tecnologías incluyen Google Analytics, Google Tag Manager y Facebook Pixel.</p>
+
+                        <h3>Cambios al Aviso de Privacidad</h3>
+                        <p>Este aviso de privacidad puede ser modificado en cualquier momento. Cualquier cambio será publicado en esta misma página: <a href="/politica-de-privacidad">mecanicag3.com/politica-de-privacidad</a></p>
+
+                        <p class="m-t30"><em>Última actualización: <%= new Date().getFullYear() %></em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Content END-->
+<%- include('partials/footer') %>
+<%- include('partials/scripts', { extraJs: typeof extraJs !== 'undefined' ? extraJs : [], inlineJs: typeof inlineJs !== 'undefined' ? inlineJs : '', useRecaptcha: typeof useRecaptcha !== 'undefined' ? useRecaptcha : false }) %>

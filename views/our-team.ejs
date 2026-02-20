@@ -1,0 +1,98 @@
+<%- include('partials/head', { title, description, extraCss }) %>
+<%- include('partials/header') %>
+    <!-- Content -->
+    <div class="page-content">
+        <!-- inner page banner -->
+        <div class="dlab-bnr-inr overlay-black-middle" style="background-image:url(/images/banner/bnr1.jpg);">
+            <div class="container">
+                <div class="dlab-bnr-inr-entry">
+                    <h1 class="text-white">Nuestro Equipo</h1>
+                </div>
+            </div>
+        </div>
+        <!-- inner page banner END -->
+        <!-- Breadcrumb row -->
+        <div class="breadcrumb-row">
+            <div class="container">
+                <ul class="list-inline">
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/quienes-somos">Nosotros</a></li>
+                    <li>Nuestro Equipo</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Breadcrumb row END -->
+        <!-- content area -->
+        <div class="content bg-white">
+            <!-- Team -->
+            <div class="section-full bg-white content-inner">
+                <div class="container">
+                    <div class="section-head text-center">
+                        <h2 class="text-uppercase">Conoce a Nuestro Equipo</h2>
+                        <div class="dlab-separator-outer">
+                            <div class="dlab-separator bg-primary style-skew"></div>
+                        </div>
+                        <p>Contamos con un equipo de profesionales comprometidos con la formación de técnicos en mecánica automotriz de excelencia.</p>
+                    </div>
+                    <div class="section-content text-center">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <div class="dlab-box m-b30">
+                                    <div class="dlab-media">
+                                        <img width="358" height="460" alt="Dirección General de Escuela de Mecánica G3" src="/images/our-team/pic1.jpg">
+                                    </div>
+                                    <div class="p-a10">
+                                        <h4 class="dlab-title text-uppercase m-b5">Dirección General</h4>
+                                        <span class="dlab-member-position">Liderazgo y visión estratégica de la institución</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <div class="dlab-box m-b30">
+                                    <div class="dlab-media">
+                                        <img width="358" height="460" alt="Coordinación Académica de Mecánica Automotriz" src="/images/our-team/pic2.jpg">
+                                    </div>
+                                    <div class="p-a10">
+                                        <h4 class="dlab-title text-uppercase m-b5">Coordinación Académica</h4>
+                                        <span class="dlab-member-position">Supervisión de programas y calidad educativa</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <div class="dlab-box m-b30">
+                                    <div class="dlab-media">
+                                        <img width="358" height="460" alt="Instructores certificados en mecánica automotriz" src="/images/our-team/pic3.jpg">
+                                    </div>
+                                    <div class="p-a10 bg-white">
+                                        <h4 class="dlab-title text-uppercase m-b5">Instructores Certificados</h4>
+                                        <span class="dlab-member-position">Profesionales con experiencia en la industria automotriz</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 col-sm-6">
+                                <div class="dlab-box m-b30">
+                                    <div class="dlab-media">
+                                        <img width="358" height="460" alt="Control Escolar de Escuela G3" src="/images/our-team/pic4.jpg">
+                                    </div>
+                                    <div class="p-a10">
+                                        <h4 class="dlab-title text-uppercase m-b5">Control Escolar</h4>
+                                        <span class="dlab-member-position">Atención a alumnos, inscripciones y seguimiento académico</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- CTA -->
+                    <div class="text-center m-t30 m-b30">
+                        <p>¿Te gustaría formar parte de nuestro equipo o conocer más sobre la institución?</p>
+                        <a href="/contacto" class="site-button button-skew"><span>Contáctanos</span><i class="fa fa-angle-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            <!-- Team END -->
+        </div>
+        <!-- content area END -->
+    </div>
+    <!-- Content END-->
+<%- include('partials/footer') %>
+<%- include('partials/scripts', { extraJs: typeof extraJs !== 'undefined' ? extraJs : [], inlineJs: typeof inlineJs !== 'undefined' ? inlineJs : '', useRecaptcha: typeof useRecaptcha !== 'undefined' ? useRecaptcha : false }) %>

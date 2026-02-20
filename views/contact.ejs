@@ -1,0 +1,94 @@
+<%- include('partials/head', { title, description, extraCss }) %>
+<%- include('partials/header') %>
+    <!-- Content -->
+    <div class="page-content">
+        <!-- inner page banner -->
+        <div class="dlab-bnr-inr overlay-black-middle" style="background-image:url(/images/background/bg5.jpg);">
+            <div class="container">
+                <div class="dlab-bnr-inr-entry">
+                    <h1 class="text-white">Contacto</h1>
+                </div>
+            </div>
+        </div>
+        <!-- inner page banner END -->
+        <!-- Breadcrumb row -->
+        <div class="breadcrumb-row">
+            <div class="container">
+                <ul class="list-inline">
+                    <li><a href="/">Inicio</a></li>
+                    <li>Contacto</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Breadcrumb row END -->
+        <!-- contact area -->
+        <div class="section-full content-inner bg-white contact-style-1">
+			<div class="container">
+                <div class="row">
+					<!-- right part start -->
+                    <div class="col-lg-4 col-md-6 d-lg-flex d-md-flex">
+                        <div class="p-a30 m-b30 border contact-area border-1">
+							<h2 class="m-b10">Horarios de Atención</h2>
+							<p>En semáforo rojo y naranja son de 9:00am a 15:00hrs - Atención vía telefónica y WhatsApp 24/7</p>
+                            <ul class="no-margin">
+                                <li class="icon-bx-wraper left m-b30">
+                                    <div class="icon-bx-xs border-1"> <a href="#" class="icon-cell"><i class="ti-location-pin"></i></a> </div>
+                                    <div class="icon-content">
+                                        <h6 class="text-uppercase m-tb0 dlab-tilte">Dirección:</h6>
+                                        <p>Marcelino Juáres No. 200, Col. Juárez, Toluca Edo. de México</p>
+                                    </div>
+                                </li>
+                                <li class="icon-bx-wraper left  m-b30">
+                                    <div class="icon-bx-xs border-1"> <a href="#" class="icon-cell"><i class="ti-email"></i></a> </div>
+                                    <div class="icon-content">
+                                        <h6 class="text-uppercase m-tb0 dlab-tilte">Email:</h6>
+                                        <p><a href="mailto:hola@mecanicag3.com">hola@mecanicag3.com</a></p>
+                                    </div>
+                                </li>
+                                <li class="icon-bx-wraper left">
+                                    <div class="icon-bx-xs border-1"> <a href="#" class="icon-cell"><i class="ti-mobile"></i></a> </div>
+                                    <div class="icon-content">
+                                        <h6 class="text-uppercase m-tb0 dlab-tilte">Teléfono de Oficinas</h6>
+                                        <p><a href="tel:7222128955">(722) 212 89 55</a></p>
+                                    </div>
+                                </li>
+                            </ul>
+							<div class="m-t20">
+								<ul class="dlab-social-icon dez-border dlab-social-icon-lg">
+									<li><a href="https://www.linkedin.com/company/mec%C3%A1nica-g3" class="fa fa-linkedin bg-primary"></a></li>
+                                    <li><a href="https://www.facebook.com/escuelamecanicag3" class="fa fa-facebook bg-primary"></a></li>
+									<li><a href="https://www.instagram.com/mecanica.g3/" class="fa fa-instagram bg-primary"></a></li>
+									<li><a href="https://www.youtube.com/channel/UCDna_ii2XAqfegq8AP1wz4g" class="fa fa-youtube-play bg-primary"></a></li>
+								</ul>
+							</div>
+                        </div>
+                    </div>
+                    <!-- right part END -->
+                    <!-- Left part start -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="p-a30 bg-gray clearfix m-b30 ">
+							<h2>Envíanos un mensaje</h2>
+
+                               <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/shell.js"></script>
+                                <script>
+                                  hbspt.forms.create({
+                                    portalId: "9315956",
+                                    formId: "f9636b34-15b1-4b77-a886-939202ff50f7"
+                                });
+                                </script>
+
+                        </div>
+                    </div>
+                    <!-- Left part END -->
+					<div class="col-lg-4 col-md-12 d-lg-flex m-b30">
+						<div class="mapouter"><div class="gmap_canvas"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3766.3204847981906!2d-99.64268878509588!3d19.268424386977834!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d274dfd36cdf35%3A0x64ab057fca72a460!2sEscuela%20de%20Mec%C3%A1nica%20Henry%20Ford!5e0!3m2!1ses-419!2smx!4v1611615160396!5m2!1ses-419!2smx" width="100%" height="100%" frameborder="0" style="border:0; min-height:400px;" allowfullscreen="" aria-hidden="false" tabindex="0" title="Ubicación de Escuela de Mecánica Automotriz G3 en Google Maps"></iframe>
+					</div>
+
+                </div>
+            </div>
+        </div>
+        <!-- contact area  END -->
+    </div>
+    <!-- Content END-->
+<%- include('partials/footer') %>
+<%- include('partials/scripts', { extraJs: typeof extraJs !== 'undefined' ? extraJs : [], inlineJs: typeof inlineJs !== 'undefined' ? inlineJs : '', useRecaptcha: typeof useRecaptcha !== 'undefined' ? useRecaptcha : false }) %>
