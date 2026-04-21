@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "overrides": {
+    "axios": ">=1.0.0 <1.14.1 || >=1.14.2"
   }
 }

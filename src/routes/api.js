@@ -10,8 +10,7 @@ const router = express.Router();
 router.post('/contact', [
   body('dzName').trim().notEmpty().escape(),
   body('dzEmail').isEmail().normalizeEmail(),
-  body('dzMessage').trim().notEmpty().escape(),
-  body('g-recaptcha-response').notEmpty()
+  body('dzMessage').trim().notEmpty().escape()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -19,22 +18,26 @@ router.post('/contact', [
       return res.json({ status: 0, msg: 'Por favor completa todos los campos correctamente.' });
     }
 
-    // Verify reCAPTCHA
-    const recaptchaResponse = req.body['g-recaptcha-response'];
-    const recaptchaVerify = await axios.post(
-      'https://www.google.com/recaptcha/api/siteverify',
-      null,
-      {
-        params: {
-          secret: process.env.RECAPTCHA_SECRET,
-          response: recaptchaResponse,
-          remoteip: req.ip
-        }
+    // Verify reCAPTCHA (only if secret is configured)
+    if (process.env.RECAPTCHA_SECRET) {
+      const recaptchaResponse = req.body['g-recaptcha-response'];
+      if (!recaptchaResponse) {
+        return res.json({ status: 0, msg: 'Por favor completa el reCAPTCHA.' });
       }
-    );
-
-    if (!recaptchaVerify.data.success) {
-      return res.json({ status: 0, msg: 'ReCaptcha no fue validado.' });
+      const recaptchaVerify = await axios.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        null,
+        {
+          params: {
+            secret: process.env.RECAPTCHA_SECRET,
+            response: recaptchaResponse,
+            remoteip: req.ip
+          }
+        }
+      );
+      if (!recaptchaVerify.data.success) {
+        return res.json({ status: 0, msg: 'ReCaptcha no fue validado.' });
+      }
     }
 
     const { dzName, dzEmail, dzMessage, dzOther } = req.body;
@@ -60,22 +63,22 @@ router.post('/subscribe', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.json({ status: 0, msg: 'Please enter valid email address.' });
+      return res.json({ status: 0, msg: 'Por favor ingresa un correo electrónico válido.' });
     }
 
     const httpCode = await subscribe(req.body.dzEmail);
 
     if (httpCode === 200) {
-      res.json({ status: 1, msg: 'You have successfully subscribed.' });
+      res.json({ status: 1, msg: 'Te has suscrito exitosamente.' });
     } else {
-      res.json({ status: 0, msg: 'Some problem occurred, please try again.' });
+      res.json({ status: 0, msg: 'Ocurrió un problema, inténtalo de nuevo.' });
     }
   } catch (error) {
     if (error.response && error.response.status === 400) {
-      return res.json({ status: 0, msg: 'You are already subscribed.' });
+      return res.json({ status: 0, msg: 'Ya estás suscrito a nuestro boletín.' });
     }
     console.error('Subscribe error:', error.message);
-    res.json({ status: 0, msg: 'Some problem occurred, please try again.' });
+    res.json({ status: 0, msg: 'Ocurrió un problema, inténtalo de nuevo.' });
   }
 });
 

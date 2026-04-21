@@ -50,7 +50,8 @@ router.get('/contacto', (req, res) => {
       'plugins/revolution/css/settings.css',
       'plugins/revolution/css/navigation.css'
     ],
-    useRecaptcha: true
+    useRecaptcha: !!process.env.RECAPTCHA_SITE_KEY,
+    recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || ''
   });
 });
 

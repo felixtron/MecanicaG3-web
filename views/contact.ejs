@@ -66,17 +66,32 @@
                     <!-- right part END -->
                     <!-- Left part start -->
                     <div class="col-lg-4 col-md-6">
-                        <div class="p-a30 bg-gray clearfix m-b30 ">
-							<h2>Envíanos un mensaje</h2>
-
-                               <script charset="utf-8" type="text/javascript" src="//js.hsforms.net/forms/shell.js"></script>
-                                <script>
-                                  hbspt.forms.create({
-                                    portalId: "9315956",
-                                    formId: "f9636b34-15b1-4b77-a886-939202ff50f7"
-                                });
-                                </script>
-
+                        <div class="p-a30 bg-gray clearfix m-b30">
+                            <h2>Envíanos un mensaje</h2>
+                            <div class="dzFormMsg"></div>
+                            <form method="post" class="dzForm" action="/api/contact">
+                                <input type="hidden" value="Contacto" name="dzToDo">
+                                <div class="form-group">
+                                    <input name="dzName" type="text" required class="form-control" placeholder="Nombre completo">
+                                </div>
+                                <div class="form-group">
+                                    <input name="dzEmail" type="email" required class="form-control" placeholder="Correo electrónico">
+                                </div>
+                                <div class="form-group">
+                                    <input name="dzOther[telefono]" type="tel" class="form-control" placeholder="Teléfono (opcional)">
+                                </div>
+                                <div class="form-group">
+                                    <textarea name="dzMessage" rows="4" required class="form-control" placeholder="¿En qué podemos ayudarte?"></textarea>
+                                </div>
+                                <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+                                <div class="form-group">
+                                    <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+                                </div>
+                                <% } %>
+                                <button name="submit" type="submit" class="site-button-secondry button-skew">
+                                    <span>Enviar mensaje</span><i class="fa fa-angle-right"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                     <!-- Left part END -->
