@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+.vscode
+.idea
+mg3bkp.zip
+public_html
+Dockerfile
+.dockerignore
+README.md
