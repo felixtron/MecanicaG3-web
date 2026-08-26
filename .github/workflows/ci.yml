@@ -74,43 +74,101 @@ jobs:
         if: always()
         run: docker rm -f g3web-ci || true
 
+  # Build + push a GHCR y deploy a propodvps1 (Podman).
+  #
+  # Este sitio NO se despliega con Dokploy: ese host (panel-prosuite) quedó
+  # congelado y en retiro tras la migración a Podman del 2026-08-14.
+  # mecanicag3.com corre desde entonces en propodvps1 como Quadlet de systemd.
+  #
+  # Mecánica (Directiva de Deployment Prosuite v2, 2026-08-22):
+  #   build -> push a GHCR con el SHA de git -> SSH con forced command ->
+  #   `podman auto-update` hace pull + restart y revierte si no queda healthy.
   deploy:
     name: Deploy a mecanicag3.com
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [checks, docker]
+    permissions:
+      contents: read
+      packages: write
     environment:
       name: production
       url: https://mecanicag3.com
-    env:
-      DOKPLOY_URL: https://panel.prosuite.pro
-      APPLICATION_ID: kA1S-Yq-JbSh0Eo0r_u14
     steps:
-      - name: Disparar deploy en Dokploy
-        run: |
-          code=$(curl -sS --max-time 60 -o /tmp/deploy.json -w '%{http_code}' \
-            -X POST "$DOKPLOY_URL/api/application.deploy" \
-            -H "x-api-key: ${{ secrets.DOKPLOY_TOKEN }}" \
-            -H 'Content-Type: application/json' \
-            -d "{\"applicationId\":\"$APPLICATION_ID\"}")
-          echo "HTTP $code"
-          cat /tmp/deploy.json || true
-          echo ""
-          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
-            echo "::error::Dokploy rechazó el deploy (HTTP $code)"
-            exit 1
-          fi
+      - uses: actions/checkout@v4
 
-      - name: Verificar producción (espera a que el contenedor nuevo sirva)
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # `latest` es el tag que mira `podman auto-update`; `sha-<sha>` es la
+      # referencia inmutable para el rollback de §7 de la directiva.
+      - name: Metadata de la imagen
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,prefix=sha-,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build y push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # La llave SSH está atada a /usr/local/bin/g3web-deploy con `command=` en
+      # authorized_keys: no abre shell, sólo dispara el rollout. El script espera
+      # a que el healthcheck dé healthy y falla el job si no lo logra.
+      #
+      # Se usa ssh directo y no appleboy/ssh-action porque hay que canalizar el
+      # token por STDIN: en vez de dejar un PAT permanente en un host que
+      # comparte 40+ contenedores de otros clientes, le pasamos el GITHUB_TOKEN
+      # de este job, que caduca al terminarlo. Por stdin y no por argumentos,
+      # porque argv se ve con `ps`.
+      - name: Deploy por SSH (podman auto-update)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sleep 30
-          for i in $(seq 1 40); do
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # El forced command ignora este comando y ejecuta g3web-deploy, pero
+          # lo deja en SSH_ORIGINAL_COMMAND: el script lee de ahí el SHA para
+          # confirmar que lo que quedó corriendo es justo lo que se construyó.
+          # Con salto de línea: sin él, el `read` del otro lado topa con EOF y
+          # devuelve error aunque haya leído el token.
+          printf '%s\n' "$GHCR_TOKEN" | ssh \
+            -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "g3web-deploy ${{ github.sha }} ${{ github.actor }}"
+
+      - name: Verificar producción
+        run: |
+          for i in $(seq 1 20); do
             if curl -fsS --max-time 10 https://mecanicag3.com/health > /tmp/health.json; then
               echo "Producción OK:"; cat /tmp/health.json; echo ""
               curl -fsS --max-time 15 https://mecanicag3.com/ | grep -q '</html>' \
-                && echo "Home renderiza correctamente." && exit 0
+                && echo "La home renderiza correctamente." && exit 0
             fi
-            sleep 15
+            sleep 10
           done
           echo "::error::mecanicag3.com no respondió en /health tras el deploy"
           exit 1

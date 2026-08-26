@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+# Wrapper de deploy para G3Web — se instala en /usr/local/bin/g3web-deploy
+# en propodvps1.
+#
+# La llave SSH de GitHub Actions va atada a este script con `command=` en
+# authorized_keys, así que ese acceso NO es una shell: sólo puede ejecutar
+# esto. Importa porque propodvps1 aloja 40+ contenedores de otros clientes y
+# un secret filtrado no debería equivaler a root en toda la máquina.
+#
+# `podman auto-update` procesa las unidades con AutoUpdate=registry; hace pull
+# de la imagen nueva, reinicia y revierte sola si no llega a healthy.
+#
+# Instalación:
+#   scp deploy/g3web-deploy propodvps1:/usr/local/bin/g3web-deploy
+#   ssh propodvps1 'chmod 750 /usr/local/bin/g3web-deploy'
+#   # y en /root/.ssh/authorized_keys, la llave del CI con:
+#   #   command="/usr/local/bin/g3web-deploy",no-port-forwarding,\
+#   #   no-agent-forwarding,no-X11-forwarding,no-pty ssh-ed25519 AAAA... g3web-ci@github-actions
+
+set -uo pipefail
+
+UNIT=g3web
+CONTENEDOR=g3web
+
+# `podman auto-update` no mira /etc/containers/auth.json: busca en
+# $XDG_RUNTIME_DIR o /run/containers/0, que en una sesión SSH no interactiva
+# vienen vacíos. Sin esto el pull sale con "authentication required".
+#
+# Trabajamos sobre una copia en tmpfs, no sobre el archivo canónico: el login
+# de GHCR de más abajo lo reescribe, y si algo saliera mal se llevaría por
+# delante las credenciales del registry local que usan los otros stacks del
+# host. La copia se borra al salir, pase lo que pase.
+AUTH=/run/g3web-deploy-auth.json
+trap 'rm -f "$AUTH"' EXIT
+cp /etc/containers/auth.json "$AUTH" 2>/dev/null || printf '{"auths":{}}' > "$AUTH"
+chmod 600 "$AUTH"
+export REGISTRY_AUTH_FILE="$AUTH"
+
+# El CI manda `g3web-deploy <sha> <actor>`. El forced command ignora ese
+# comando y ejecuta este script, pero deja lo pedido en SSH_ORIGINAL_COMMAND.
+# El SHA no es un secreto, así que pasarlo por ahí es seguro.
+#
+# Sirve para cerrar un fallo silencioso: si el pull no trae la imagen nueva
+# —por credenciales, por un tag que no se movió— `auto-update` no falla,
+# simplemente no actualiza, y el job quedaría verde sin haber desplegado nada.
+ESPERADO=$(printf '%s' "${SSH_ORIGINAL_COMMAND:-}" | awk '{print $2}')
+ACTOR=$(printf '%s' "${SSH_ORIGINAL_COMMAND:-}" | awk '{print $3}')
+
+# El CI manda su GITHUB_TOKEN por STDIN (no por argumentos: lo que va en argv
+# es visible con `ps` para cualquier proceso del host, y aquí conviven
+# contenedores de otros clientes). Ese token caduca al terminar el job, así que
+# no queda ninguna credencial de larga vida en un host compartido.
+#
+# El `|| true` importa: si el token llega sin salto de línea final, `read`
+# devuelve error al topar con EOF **aunque ya haya llenado la variable**.
+if [ ! -t 0 ]; then
+  IFS= read -r -t 10 TOKEN 2>/dev/null || true
+  if [ -n "${TOKEN:-}" ]; then
+    if printf '%s' "$TOKEN" | podman login ghcr.io \
+        --username "${ACTOR:-github-actions}" --password-stdin \
+        --authfile "$AUTH" >/dev/null 2>&1; then
+      echo "Autenticado en ghcr.io con el token efímero del job"
+    else
+      echo "ERROR: falló el login en ghcr.io con el token del job" >&2
+      exit 1
+    fi
+    unset TOKEN
+  fi
+fi
+
+rev() {
+  podman inspect "$CONTENEDOR" \
+    --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || echo n/a
+}
+
+verificar_revision() {
+  [ -z "$ESPERADO" ] && return 0
+  local actual
+  actual=$(rev)
+  if [ "$actual" != "$ESPERADO" ]; then
+    echo "ERROR: se esperaba la revisión $ESPERADO pero corre $actual." >&2
+    echo "       La imagen nueva no llegó al host: revisa el tag de Image= en" >&2
+    echo "       /etc/containers/systemd/g3web.container y las credenciales" >&2
+    echo "       del registry." >&2
+    return 1
+  fi
+  echo "Revisión verificada: $actual"
+  return 0
+}
+
+echo "Revisión antes: $(rev)"
+[ -n "$ESPERADO" ] && echo "Revisión esperada: $ESPERADO"
+
+# auto-update procesa TODAS las unidades con el label y devuelve error si
+# cualquiera falla. En este host conviven otros proyectos, así que el resultado
+# de g3web no puede depender de un contenedor ajeno: se juzga sólo su línea.
+salida=$(podman auto-update --format '{{.Unit}} | {{.Image}} | actualizado={{.Updated}}' 2>&1)
+codigo=$?
+echo "$salida"
+
+linea=$(printf '%s\n' "$salida" | grep "^${UNIT}\.service" || true)
+if [ -z "$linea" ]; then
+  echo "ERROR: auto-update no reportó ${UNIT}.service (¿falta AutoUpdate=registry?)" >&2
+  [ "$codigo" -ne 0 ] && echo "(auto-update salió con $codigo)" >&2
+  exit 1
+fi
+case "$linea" in
+  *actualizado=failed*)
+    echo "ERROR: la actualización de ${UNIT} falló" >&2
+    exit 1 ;;
+esac
+
+# 30 × 10s = 5 min. Express arranca en menos de un segundo; el margen cubre un
+# pull lento de la imagen.
+for i in $(seq 1 30); do
+  estado=$(podman inspect "$CONTENEDOR" --format '{{.State.Status}}' 2>/dev/null || echo ausente)
+  salud=$(podman inspect "$CONTENEDOR" \
+    --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}sin-healthcheck{{end}}' 2>/dev/null || echo ausente)
+  echo "Intento $i: estado=$estado salud=$salud"
+
+  case "$salud" in
+    healthy|sin-healthcheck)
+      if [ "$estado" = "running" ]; then
+        verificar_revision || exit 1
+        echo "Rollout OK — revisión: $(rev)"
+        exit 0
+      fi
+      ;;
+    unhealthy)
+      echo "ERROR: el contenedor quedó unhealthy. Últimos logs:" >&2
+      podman logs --tail 50 "$CONTENEDOR" >&2 2>&1 || true
+      exit 1
+      ;;
+  esac
+  sleep 10
+done
+
+echo "ERROR: timeout esperando a que ${UNIT} quedara sano" >&2
+podman logs --tail 50 "$CONTENEDOR" >&2 2>&1 || true
+exit 1

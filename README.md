@@ -117,13 +117,54 @@ funciona sin reCAPTCHA.
 
 ## Deploy
 
-Automático al hacer merge a `main`, y **solo si el CI pasa**. El job `deploy`
-llama a la API de Dokploy y luego verifica que producción responda.
+**mecanicag3.com corre en `propodvps1`** (Podman 5.4.2) como Quadlet de systemd,
+no en Dokploy. Sigue la [Directiva de Deployment Prosuite v2](https://github.com/felixtron/MecanicaG3-web)
+(2026-08-22, Podman), cuya copia canónica vive en ProBrain.
 
-Deploy manual (por ejemplo tras cambiar variables de entorno):
+| | |
+|---|---|
+| Host | `propodvps1` (alias SSH, puerto 2226) |
+| Unidad | `/etc/containers/systemd/g3web.container` — copia versionada en [deploy/g3web.container](deploy/g3web.container) |
+| Imagen | `ghcr.io/felixtron/mecanicag3-web:latest` (+ `sha-<git-sha>` inmutable) |
+| Ruteo | Traefik por `Label=`, certresolver `letsencrypt-dns` |
+| Entorno | `/etc/containers/env/g3web.env` (`0600`, administrado en el servidor) |
 
-- Actions → *CI* → **Run workflow** sobre `main`, o
-- botón **Deploy** en el panel de Dokploy.
+### Flujo automático
 
-Requiere el secret `DOKPLOY_TOKEN` en GitHub (Settings → Secrets and variables →
-Actions).
+Merge a `main` → CI corre los checks y el build → publica en GHCR con
+`sha-<git-sha>` y mueve `latest` → SSH con *forced command* a
+`/usr/local/bin/g3web-deploy` → `podman auto-update` hace pull, reinicia y
+**revierte solo si el contenedor nuevo no llega a healthy**.
+
+La llave del CI no abre shell: está atada al script con `command=` en
+`authorized_keys`. El token de GHCR se manda por stdin y caduca al terminar el
+job, así que el servidor no guarda credenciales de larga vida.
+
+### Rollback
+
+`latest` no es una versión. Para volver atrás se fija el tag inmutable:
+
+```bash
+ssh propodvps1
+sed -i 's|^Image=.*|Image=ghcr.io/felixtron/mecanicag3-web:sha-<sha-anterior>|' \
+  /etc/containers/systemd/g3web.container
+systemctl daemon-reload && systemctl restart g3web.service
+```
+
+### Cambiar la unidad o las variables de entorno
+
+La unidad se edita en el repo y se copia al servidor:
+
+```bash
+scp deploy/g3web.container propodvps1:/etc/containers/systemd/g3web.container
+ssh propodvps1 '/usr/libexec/podman/quadlet -dryrun'   # validar ANTES de reiniciar
+ssh propodvps1 'systemctl daemon-reload && systemctl restart g3web.service'
+```
+
+Las variables de entorno **no** viven en el repo: se editan en
+`/etc/containers/env/g3web.env` (`0600`) y requieren `systemctl restart g3web`.
+
+### Secrets necesarios en GitHub
+
+`SSH_HOST`, `SSH_USER`, `SSH_PORT`, `SSH_PRIVATE_KEY`. El acceso a GHCR usa el
+`GITHUB_TOKEN` del propio job, no hace falta secret.
