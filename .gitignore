@@ -1,7 +1,22 @@
+# Dependencias
 node_modules/
+
+# Entorno — nunca commitear credenciales (SMTP, reCAPTCHA, MailChimp)
 .env
+.env.*
+!.env.example
+
+# Logs y artefactos
 *.log
+npm-debug.log*
+.npm/
+
+# Sistema operativo / editores
 .DS_Store
 __MACOSX/
+.vscode/
+.idea/
+
+# Respaldos y sitio legacy PHP (no forman parte del deploy)
 *.zip
 public_html/
