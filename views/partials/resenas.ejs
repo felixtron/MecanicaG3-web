@@ -1,0 +1,32 @@
+<% if (typeof resenas !== 'undefined' && resenas.length) { %>
+<!-- RESEÑAS DE GOOGLE -->
+<div class="section-full bg-gray content-inner" id="resenas">
+    <div class="container">
+        <div class="section-head text-center">
+            <h2 class="text-uppercase">Lo que dicen quienes ya pasaron por aquí</h2>
+            <div class="dlab-separator-outer">
+                <div class="dlab-separator bg-secondry style-skew"></div>
+            </div>
+            <p>Reseñas publicadas por nuestros alumnos y clientes en Google.</p>
+        </div>
+        <div class="row">
+            <% resenas.forEach(function (r) { %>
+            <div class="col-lg-4 col-md-6 col-sm-12 m-b30">
+                <div class="p-a30 bg-white h-100">
+                    <div class="m-b10 text-primary" aria-label="<%= r.estrellas %> de 5 estrellas">
+                        <% for (var i = 0; i < 5; i++) { %><i class="fa fa-star<%= i < r.estrellas ? '' : '-o' %>"></i><% } %>
+                    </div>
+                    <p class="m-b20"><%= r.texto %></p>
+                    <h6 class="m-b0"><%= r.autor %></h6>
+                    <small class="text-muted"><%= r.fecha %></small>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <div class="text-center">
+            <a href="<%= perfilGoogle %>" class="site-button button-skew" target="_blank" rel="noopener nofollow"><span>Ver todas las reseñas en Google</span><i class="fa fa-angle-right"></i></a>
+        </div>
+    </div>
+</div>
+<!-- RESEÑAS DE GOOGLE END -->
+<% } %>

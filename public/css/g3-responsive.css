@@ -192,3 +192,64 @@
     padding: 15px;
   }
 }
+
+/* ── Barra de convocatoria ─────────────────────────────────────────────────
+   Va sobre el header en todas las páginas. Contrasta en oscuro a propósito:
+   el main-bar del tema ya es rojo, y una barra roja encima se perdería. */
+.g3-aviso {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+.g3-aviso .container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 18px;
+}
+.g3-aviso__texto {
+    margin: 0;
+    color: #fff;
+}
+.g3-aviso__texto strong {
+    color: #e63946;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.g3-aviso__detalle {
+    display: inline-block;
+    margin-left: 8px;
+    opacity: .85;
+}
+.g3-aviso__cta {
+    display: inline-block;
+    padding: 6px 16px;
+    background: #e63946;
+    color: #fff !important;
+    border-radius: 2px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background .2s;
+}
+.g3-aviso__cta:hover,
+.g3-aviso__cta:focus {
+    background: #c1121f;
+    text-decoration: none;
+}
+
+/* En móvil el detalle largo apila y empuja el CTA fuera de vista: se oculta
+   el detalle y se deja el titular con el botón, que es lo que convierte. */
+@media (max-width: 767px) {
+    .g3-aviso {
+        font-size: 13px;
+        text-align: center;
+    }
+    .g3-aviso__detalle {
+        display: block;
+        margin-left: 0;
+        font-size: 12px;
+    }
+}

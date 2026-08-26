@@ -4,6 +4,19 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <div class="page-wraper">
+    <!-- Barra de convocatoria (todo el sitio). Se controla desde
+         src/data/convocatoria.js para no editar la plantilla cada ciclo. -->
+    <% if (typeof convocatoria !== 'undefined' && convocatoria.activa) { %>
+    <div class="g3-aviso">
+        <div class="container">
+            <p class="g3-aviso__texto">
+                <strong><%= convocatoria.titulo %></strong>
+                <span class="g3-aviso__detalle"><%= convocatoria.detalle %></span>
+            </p>
+            <a class="g3-aviso__cta" href="<%= convocatoria.ctaUrl %>"<%= convocatoria.ctaExterno ? ' target="_blank" rel="noopener"' : '' %>><%= convocatoria.ctaTexto %></a>
+        </div>
+    </div>
+    <% } %>
     <!-- header -->
     <header class="site-header header mo-left header-style-1">
         <!-- top bar -->
