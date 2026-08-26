@@ -1,4 +1,6 @@
 const express = require('express');
+const { convocatoria } = require('../data/convocatoria');
+const { resenas, PERFIL_GOOGLE } = require('../data/resenas');
 const router = express.Router();
 
 const defaultMeta = {
@@ -6,7 +8,8 @@ const defaultMeta = {
   description: 'Escuela de Mecánica Automotriz G3 en Toluca, Estado de México. Formamos técnicos certificados en mecánica automotriz, electrónica y diagnóstico de vehículos de combustión, híbridos y eléctricos desde 1999.',
   canonicalPath: '',
   extraCss: [],
-  extraJs: []
+  extraJs: [],
+  convocatoria
 };
 
 // Home
@@ -16,6 +19,8 @@ router.get('/', (req, res) => {
     title: 'Escuela de Mecánica Automotriz G3 | Certificación Automotriz en Toluca',
     description: 'Escuela de Mecánica Automotriz G3 en Toluca. Más de 4500 egresados, 20+ años formando técnicos certificados en mecánica automotriz, electrónica y diagnóstico vehicular.',
     canonicalPath: '/',
+    resenas,
+    perfilGoogle: PERFIL_GOOGLE,
     extraCss: [
       'plugins/revolution/css/settings.css',
       'plugins/revolution/css/navigation.css'

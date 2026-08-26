@@ -97,6 +97,22 @@ async function checkStatic() {
 async function main() {
   console.log(`\nSmoke test — arrancando servidor en ${BASE}\n`);
 
+  // Si el puerto ya está ocupado, el servidor nuevo no arranca y el test falla
+  // con un "no respondió en /health" que no dice nada. Suele pasar cuando una
+  // corrida anterior quedó huérfana (por ejemplo al truncar su salida con
+  // `head`, que cierra la tubería y deja el proceso vivo).
+  try {
+    const previo = await fetch(`${BASE}/health`, { signal: AbortSignal.timeout(1000) });
+    if (previo.ok) {
+      console.error(`✗ El puerto ${PORT} ya está ocupado por otro servidor.`);
+      console.error(`  Ciérralo con:  lsof -ti :${PORT} | xargs kill`);
+      console.error('  O usa otro puerto:  SMOKE_PORT=4001 npm run smoke');
+      process.exit(1);
+    }
+  } catch {
+    // Nadie responde: el puerto está libre, que es lo esperado.
+  }
+
   const server = spawn(process.execPath, ['server.js'], {
     cwd: path.join(__dirname, '..'),
     env: { ...process.env, PORT: String(PORT), NODE_ENV: 'production' },
