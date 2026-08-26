@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Sintaxis, lockfile y smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Sintaxis (JS + plantillas EJS)
+        run: npm run lint
+
+      - name: Lockfile sincronizado
+        run: npm run check:lockfile
+
+      - name: Smoke test (rutas, redirects 301, 404, estáticos)
+        run: npm run smoke
+
+  docker:
+    name: Build de imagen y healthcheck
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build (mismo Dockerfile que usa Dokploy)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: g3web:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Arrancar contenedor y esperar /health
+        run: |
+          docker run -d --name g3web-ci -p 3000:3000 g3web:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health; then
+              echo ""
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::El contenedor no respondió en /health tras 60s"
+          docker logs g3web-ci
+          exit 1
+
+      - name: La home renderiza dentro del contenedor
+        run: curl -fsS http://127.0.0.1:3000/ | grep -q '</html>'
+
+      - name: Limpiar
+        if: always()
+        run: docker rm -f g3web-ci || true
+
+  deploy:
+    name: Deploy a mecanicag3.com
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [checks, docker]
+    environment:
+      name: production
+      url: https://mecanicag3.com
+    env:
+      DOKPLOY_URL: https://panel.prosuite.pro
+      APPLICATION_ID: kA1S-Yq-JbSh0Eo0r_u14
+    steps:
+      - name: Disparar deploy en Dokploy
+        run: |
+          code=$(curl -sS --max-time 60 -o /tmp/deploy.json -w '%{http_code}' \
+            -X POST "$DOKPLOY_URL/api/application.deploy" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_TOKEN }}" \
+            -H 'Content-Type: application/json' \
+            -d "{\"applicationId\":\"$APPLICATION_ID\"}")
+          echo "HTTP $code"
+          cat /tmp/deploy.json || true
+          echo ""
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "::error::Dokploy rechazó el deploy (HTTP $code)"
+            exit 1
+          fi
+
+      - name: Verificar producción (espera a que el contenedor nuevo sirva)
+        run: |
+          sleep 30
+          for i in $(seq 1 40); do
+            if curl -fsS --max-time 10 https://mecanicag3.com/health > /tmp/health.json; then
+              echo "Producción OK:"; cat /tmp/health.json; echo ""
+              curl -fsS --max-time 15 https://mecanicag3.com/ | grep -q '</html>' \
+                && echo "Home renderiza correctamente." && exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::mecanicag3.com no respondió en /health tras el deploy"
+          exit 1
