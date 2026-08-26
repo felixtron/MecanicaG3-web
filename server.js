@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const { securityMiddleware, apiLimiter } = require('./src/middleware/security');
 const pagesRouter = require('./src/routes/pages');
 const apiRouter = require('./src/routes/api');
+const pkg = require('./package.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,16 @@ app.use('/api', apiLimiter);
 // Routes
 app.use('/', pagesRouter);
 app.use('/api', apiRouter);
+
+// Health check — lo consultan el HEALTHCHECK de Docker, Dokploy y el smoke test.
+// Debe ir antes del handler 404 y no depender de servicios externos.
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    version: pkg.version,
+    uptime: Math.round(process.uptime())
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
