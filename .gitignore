@@ -20,3 +20,7 @@ __MACOSX/
 # Respaldos y sitio legacy PHP (no forman parte del deploy)
 *.zip
 public_html/
+
+# Duplicados que crea la sincronizacion de iCloud sobre ~/Documents
+# ("mailer 2.js"). Son copias identicas y no deben entrar al repo.
+* [0-9].*
