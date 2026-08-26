@@ -41,6 +41,15 @@ EnvironmentFile=/etc/containers/env/g3web.env
 # Antes la unidad estaba en `Pull=never` apuntando a localhost:5000, así que el
 # contenedor quedaba clavado en una imagen local del 14-ago: ningún restart
 # bajaba una versión nueva y no existía forma de que el CI llegara a producción.
+# Respaldo de contactos del formulario. Sin este volumen se perderian en cada
+# redeploy, y el rootfs va en solo lectura, asi que no hay donde escribir.
+# El directorio del host DEBE pertenecer al uid 1001, que es el usuario con el
+# que corre el contenedor. Al montar un volumen, la propiedad del host gana
+# sobre la que fijo el Dockerfile, asi que un `mkdir` como root deja el
+# respaldo sin permiso de escritura y la red de seguridad queda inerte:
+#   chown -R 1001:1001 <directorio> && chmod 750 <directorio>
+Volume=/opt/stacks/g3web/contactos:/data:Z
+
 Pull=newer
 
 # Habilita `podman auto-update`: hace pull + restart y revierte solo si el
