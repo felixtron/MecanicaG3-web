@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# pre-push — última barrera antes de que el código salga de esta máquina.
+# Un push a main dispara el deploy a mecanicag3.com, así que aquí corre la
+# suite completa: sintaxis, lockfile y smoke test contra el servidor real.
+# Saltar en una emergencia:  git push --no-verify
+#
+set -uo pipefail
+
+RED='\033[0;31m'; GRN='\033[0;32m'; YEL='\033[0;33m'; NC='\033[0m'
+
+REMOTE_REF=$(git rev-parse --abbrev-ref HEAD)
+printf "\n${YEL}pre-push${NC} — validando '%s' antes de subir…\n\n" "$REMOTE_REF"
+
+if ! npm run --silent check; then
+  printf "\n${RED}✗ Push abortado — los checks fallaron.${NC}\n"
+  printf "  Corrige y reintenta, o ${YEL}git push --no-verify${NC} para forzar.\n\n"
+  exit 1
+fi
+
+printf "\n${GRN}✓ Checks OK${NC}"
+if [ "$REMOTE_REF" = "main" ]; then
+  printf " — este push desplegará a ${YEL}https://mecanicag3.com${NC}\n\n"
+else
+  printf " — abre el PR con: ${YEL}gh pr create --fill${NC}\n\n"
+fi
+exit 0

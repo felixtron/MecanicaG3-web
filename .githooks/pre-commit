@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+#
+# pre-commit — validaciones rápidas sobre los archivos en stage (< 2s).
+# Objetivo: que nada roto o secreto llegue siquiera al historial local.
+# Saltar en una emergencia:  git commit --no-verify
+#
+set -uo pipefail
+
+RED='\033[0;31m'; YEL='\033[0;33m'; GRN='\033[0;32m'; NC='\033[0m'
+FAILED=0
+MAX_BYTES=2097152   # 2 MB — el archivo trackeado más grande hoy pesa ~712 KB
+
+fail() { printf "${RED}✗ %s${NC}\n" "$1"; FAILED=1; }
+warn() { printf "${YEL}! %s${NC}\n" "$1"; }
+ok()   { printf "${GRN}✓ %s${NC}\n" "$1"; }
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$STAGED" ] && exit 0
+
+# ── 1. Archivos de entorno / credenciales ────────────────────────────────────
+ENV_FILES=$(echo "$STAGED" | grep -E '(^|/)\.env' | grep -v '\.env\.example$' || true)
+if [ -n "$ENV_FILES" ]; then
+  fail "Archivos de entorno en stage (contienen credenciales SMTP/reCAPTCHA/MailChimp):"
+  echo "$ENV_FILES" | sed 's/^/    /'
+  echo "    → git restore --staged $(echo "$ENV_FILES" | tr '\n' ' ')"
+fi
+
+KEY_FILES=$(echo "$STAGED" | grep -E '\.(pem|key|p12|pfx|keystore|jks)$|(^|/)id_(rsa|ed25519|ecdsa)$' || true)
+if [ -n "$KEY_FILES" ]; then
+  fail "Claves privadas en stage:"
+  echo "$KEY_FILES" | sed 's/^/    /'
+fi
+
+# ── 2. Secretos dentro del contenido ─────────────────────────────────────────
+PATTERNS='-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk_live_[0-9a-zA-Z]{20,}|xox[baprs]-[0-9a-zA-Z-]{10,}|gh[pousr]_[0-9A-Za-z]{30,}|[0-9a-f]{32}-us[0-9]{1,2}'
+LEAKS=$(git diff --cached -U0 | grep -E "^\+" | grep -vE "^\+\+\+" | grep -nEi -e "$PATTERNS" || true)
+if [ -n "$LEAKS" ]; then
+  fail "Posible secreto en el contenido a commitear:"
+  echo "$LEAKS" | cut -c1-120 | sed 's/^/    /'
+  echo "    → si es un falso positivo:  git commit --no-verify"
+fi
+
+# ── 3. Archivos grandes ──────────────────────────────────────────────────────
+BIG=""
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  size=$(git cat-file -s "$(git rev-parse ":$f" 2>/dev/null)" 2>/dev/null || echo 0)
+  if [ "$size" -gt "$MAX_BYTES" ]; then
+    BIG="$BIG    $f ($((size / 1024)) KB)\n"
+  fi
+done <<< "$STAGED"
+if [ -n "$BIG" ]; then
+  fail "Archivos > $((MAX_BYTES / 1024 / 1024)) MB en stage (inflan el repo para siempre):"
+  printf "$BIG"
+fi
+
+# ── 4. Marcadores de conflicto sin resolver ──────────────────────────────────
+CONFLICTS=$(git diff --cached -U0 | grep -E "^\+(<<<<<<<|=======$|>>>>>>>)" || true)
+if [ -n "$CONFLICTS" ]; then
+  fail "Marcadores de conflicto de merge sin resolver"
+fi
+
+# ── 5. Sintaxis de JS y plantillas EJS en stage ──────────────────────────────
+CODE=$(echo "$STAGED" | grep -E '\.(js|ejs)$' || true)
+if [ -n "$CODE" ]; then
+  # shellcheck disable=SC2086
+  if ! node scripts/lint.js $CODE; then
+    fail "Errores de sintaxis (ver arriba)"
+  fi
+fi
+
+# ── 6. package.json y package-lock.json van juntos ───────────────────────────
+if echo "$STAGED" | grep -q '^package.json$'; then
+  if ! echo "$STAGED" | grep -q '^package-lock.json$'; then
+    if ! git diff --cached --quiet -- package.json; then
+      warn "package.json cambió pero package-lock.json no está en stage"
+      warn "  el build de Docker usa 'npm ci' y aborta si hay drift"
+      echo "    → npm install && git add package-lock.json"
+    fi
+  fi
+  node scripts/check-lockfile.js || fail "Lockfile desincronizado"
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+  printf "\n${RED}Commit abortado.${NC} Corrige lo anterior o usa ${YEL}git commit --no-verify${NC} si sabes lo que haces.\n\n"
+  exit 1
+fi
+
+ok "pre-commit OK"
+exit 0

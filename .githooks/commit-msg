@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# commit-msg — exige Conventional Commits.
+# Con un historial consistente, `git log --oneline` sirve como changelog y se
+# puede saber de un vistazo qué push tocó producción y por qué.
+# Saltar:  git commit --no-verify
+#
+set -uo pipefail
+
+RED='\033[0;31m'; YEL='\033[0;33m'; NC='\033[0m'
+MSG_FILE="$1"
+SUBJECT=$(head -n1 "$MSG_FILE")
+
+# Merges, reverts y fixups pasan sin revisión
+case "$SUBJECT" in
+  "Merge "*|"Revert "*|"fixup!"*|"squash!"*) exit 0 ;;
+esac
+
+TYPES='feat|fix|perf|refactor|style|docs|test|build|ci|chore|deploy|seo|content'
+PATTERN="^(${TYPES})(\([a-z0-9._/-]+\))?!?: .{1,}$"
+
+if ! echo "$SUBJECT" | grep -qE "$PATTERN"; then
+  printf "\n${RED}✗ Mensaje de commit inválido${NC}\n\n"
+  printf "  Recibido: %s\n\n" "$SUBJECT"
+  printf "  Formato:  ${YEL}tipo(alcance opcional): descripción${NC}\n\n"
+  printf "  Tipos:    feat, fix, perf, refactor, style, docs, test,\n"
+  printf "            build, ci, chore, deploy, seo, content\n\n"
+  printf "  Ejemplos: feat(registro): agrega selector de modalidad sabatina\n"
+  printf "            fix(api): valida reCAPTCHA cuando falta el secret\n"
+  printf "            seo(home): corrige meta description duplicada\n"
+  printf "            build: sube la imagen base a node:22-alpine\n\n"
+  exit 1
+fi
+
+if [ ${#SUBJECT} -gt 72 ]; then
+  printf "\n${RED}✗ La primera línea tiene %s caracteres (máximo 72)${NC}\n" "${#SUBJECT}"
+  printf "  Mueve el detalle al cuerpo del mensaje.\n\n"
+  exit 1
+fi
+
+exit 0
