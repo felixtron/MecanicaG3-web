@@ -1,0 +1,30 @@
+# Normaliza los finales de línea en el repositorio a LF.
+# Sin esto, cualquier herramienta que reescriba un archivo (npm, un editor,
+# un formateador) produce un diff de archivo completo y el cambio real se
+# vuelve imposible de revisar.
+* text=auto eol=lf
+
+# Los scripts DEBEN ser LF: un CRLF rompe el shebang ("bad interpreter").
+.githooks/* text eol=lf
+*.sh        text eol=lf
+
+# Binarios: git no debe tocarlos ni intentar hacer diff de texto.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.zip  binary
+*.eot  binary
+*.ttf  binary
+*.woff binary
+*.woff2 binary
+*.mp4  binary
+
+# Diffs más legibles para los assets del tema
+*.svg  text eol=lf
+*.min.js  -diff
+*.min.css -diff
+package-lock.json -diff linguist-generated=true
