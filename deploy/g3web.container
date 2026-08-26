@@ -1,0 +1,102 @@
+# Unidad Quadlet de producción — propodvps1 (Podman 5.4.2).
+#
+# Copia versionada de /etc/containers/systemd/g3web.container. La unidad que
+# servía este sitio (app-quantify.container) vivía SOLO en el servidor, con un
+# nombre autogenerado por Dokploy que no decía nada, apuntando a una imagen del
+# registry local: ningún cambio de infra era revisable ni reversible desde git.
+#
+# Para aplicar:
+#   scp deploy/g3web.container propodvps1:/etc/containers/systemd/g3web.container
+#   ssh propodvps1 '/usr/libexec/podman/quadlet -dryrun'   # validar ANTES
+#   ssh propodvps1 'systemctl daemon-reload && systemctl restart g3web.service'
+#
+# Sigue el patrón ya probado en recsa.container y bpm.container, y la
+# Directiva de Deployment Prosuite v2 (2026-08-22, Podman).
+
+[Unit]
+Description=g3web — mecanicag3.com (Express 4 + EJS)
+After=network-online.target traefik.service
+Wants=network-online.target
+
+[Container]
+ContainerName=g3web
+
+# `podman auto-update` compara el digest de ESTE tag contra el del registry,
+# así que la referencia de despliegue tiene que ser un tag móvil. Cada build
+# publica además un tag `sha-<git-sha>`, que es lo que se fija a mano para
+# hacer rollback (§7 de la directiva v2):
+#
+#   sed -i 's|^Image=.*|Image=ghcr.io/felixtron/mecanicag3-web:sha-<sha>|' \
+#     /etc/containers/systemd/g3web.container
+#   systemctl daemon-reload && systemctl restart g3web.service
+Image=ghcr.io/felixtron/mecanicag3-web:latest
+
+Network=prosuite.network
+
+# El entorno NO va en Environment=: los secretos (SMTP, reCAPTCHA, MailChimp)
+# no deben quedar en un archivo world-readable ni en `podman inspect`.
+# El archivo es 0600 y lo administra el servidor, no el repo.
+EnvironmentFile=/etc/containers/env/g3web.env
+
+# Antes la unidad estaba en `Pull=never` apuntando a localhost:5000, así que el
+# contenedor quedaba clavado en una imagen local del 14-ago: ningún restart
+# bajaba una versión nueva y no existía forma de que el CI llegara a producción.
+Pull=newer
+
+# Habilita `podman auto-update`: hace pull + restart y revierte solo si el
+# contenedor nuevo no llega a healthy.
+AutoUpdate=registry
+
+# El healthcheck va AQUÍ y no (solo) en el Dockerfile: la imagen se publica con
+# media types OCI y el spec OCI no tiene campo Healthcheck, así que BuildKit lo
+# descarta al exportar. Sin esto `podman auto-update` no puede detectar un
+# rollout roto y no hay reinicio automático real.
+#
+# Sin comillas ni paréntesis: Quadlet convierte HealthCmd a CMD-SHELL y systemd
+# se come el quoting. 127.0.0.1 y no `localhost`, que dentro del contenedor
+# resuelve a IPv6 mientras Node escucha en IPv4.
+HealthCmd=wget --spider -q http://127.0.0.1:3000/health || exit 1
+HealthInterval=30s
+HealthTimeout=5s
+HealthStartPeriod=20s
+HealthRetries=3
+
+# El contenedor corría sin ningún tope (39 de 41 en este host están así): un
+# pico puede ahogar a los otros 40 contenedores. Vía PodmanArgs porque Quadlet
+# 5.4.2 no tiene claves Memory=/CPUQuota= nativas.
+# Un Express que sirve EJS y estáticos vive de sobra en 384 MiB.
+PodmanArgs=--memory=384m --memory-swap=384m --cpus=0.5
+
+# Endurecimiento (§5 de la directiva). La app no escribe en disco: todo lo que
+# sirve es estático o renderizado en memoria, así que el rootfs puede ir en
+# solo lectura. El Dockerfile ya corre como nodeapp (uid 1001) y escucha en
+# 3000, así que no necesita ninguna capability.
+ReadOnly=true
+Tmpfs=/tmp
+NoNewPrivileges=true
+DropCapability=ALL
+
+# Ruteo por Label= y no por file provider: la directiva v2 fija el file
+# provider como estándar, pero admite Label= en propodvps1 (que tiene el
+# docker provider sobre podman.sock) para routers de un único Host() sin
+# espacios, que es exactamente este caso. Mantenerlo así evita tocar
+# /opt/traefik/dynamic/ y arriesgar el ingress de los otros 40 contenedores.
+Label=traefik.enable=true
+Label=traefik.docker.network=prosuite
+Label=traefik.http.services.g3web.loadbalancer.server.port=3000
+Label=traefik.http.routers.g3web-r1.rule=Host(`mecanicag3.com`)
+Label=traefik.http.routers.g3web-r1.entrypoints=websecure
+Label=traefik.http.routers.g3web-r1.service=g3web
+Label=traefik.http.routers.g3web-r1.tls.certresolver=letsencrypt-dns
+Label=traefik.http.routers.g3web-r2.rule=Host(`www.mecanicag3.com`)
+Label=traefik.http.routers.g3web-r2.entrypoints=websecure
+Label=traefik.http.routers.g3web-r2.service=g3web
+Label=traefik.http.routers.g3web-r2.tls.certresolver=letsencrypt-dns
+Label=org.prosuite.stack=g3web
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target default.target
